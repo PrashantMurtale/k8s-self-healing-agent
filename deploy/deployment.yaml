@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: self-healing-agent
+  namespace: self-healing
+  labels:
+    app: self-healing-agent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: self-healing-agent
+  template:
+    metadata:
+      labels:
+        app: self-healing-agent
+    spec:
+      serviceAccountName: self-healing-agent
+      containers:
+        - name: agent
+          image: prashantmurtale/k8s-self-healing-agent:latest
+          env:
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: ai-config
+                  key: GEMINI_API_KEY
+            - name: DRY_RUN
+              value: "false"
+            - name: EXCLUDED_NAMESPACES
+              value: "kube-system,kube-public,self-healing"
+            - name: COOLDOWN_SECONDS
+              value: "300"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"
